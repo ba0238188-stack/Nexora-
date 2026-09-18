@@ -72,7 +72,7 @@ public class MainActivity extends Activity {
                 if (fileCallback != null) fileCallback.onReceiveValue(null);
                 fileCallback = cb;
 
-                Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                Intent pick = new Intent(Intent.ACTION_GET_CONTENT);
                 pick.addCategory(Intent.CATEGORY_OPENABLE);
                 pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 pick.setType("*/*");
