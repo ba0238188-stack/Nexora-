@@ -159,7 +159,7 @@ async function uploadMedia(file,pathPrefix='media'){
   if(!file)throw new Error('لم يتم اختيار ملف');
   if(file.size>50*1024*1024)throw new Error('الفيديو أو الملف يجب أن يكون أقل من 50MB');
   const ext=(file.name?.split('.').pop()||((file.type||'').split('/')[1]||'bin')).toLowerCase().replace(/[^a-z0-9]/g,'')||'bin';
-  const path=`${pathPrefix}/${meUser.id}/${crypto.randomUUID()}.${ext}`;
+  const rid=(globalThis.crypto&&typeof globalThis.crypto.randomUUID==='function')?globalThis.crypto.randomUUID():('nx-'+Date.now()+'-'+Math.random().toString(36).slice(2,10));const path=`${pathPrefix}/${meUser.id}/${rid}.${ext}`;
   const {error}=await sb.storage.from('nexora-media').upload(path,file,{upsert:false,contentType:file.type||undefined,cacheControl:'3600'});
   if(error)throw error;
   return sb.storage.from('nexora-media').getPublicUrl(path).data.publicUrl
