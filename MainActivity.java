@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.webkit.CookieManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -35,9 +34,6 @@ public class MainActivity extends Activity {
     }
 
     private void requestNeededPermissions() {
-        // The Android system document picker grants access to selected media itself.
-        // Only request notification permission on Android 13+; unnecessary storage/camera
-        // permissions can otherwise cause permission-dialog/chooser problems.
         if (android.os.Build.VERSION.SDK_INT >= 33 &&
                 checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, PERMISSIONS);
@@ -76,34 +72,32 @@ public class MainActivity extends Activity {
                 if (fileCallback != null) fileCallback.onReceiveValue(null);
                 fileCallback = cb;
 
-                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                i.addCategory(Intent.CATEGORY_OPENABLE);
-                i.setType("*/*");
+                Intent pick = new Intent(Intent.ACTION_GET_CONTENT);
+                pick.addCategory(Intent.CATEGORY_OPENABLE);
+                pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                pick.setType("*/*");
 
-                String[] accept = params != null ? params.getAcceptTypes() : null;
                 ArrayList<String> mimeTypes = new ArrayList<>();
-                if (accept != null) {
-                    for (String type : accept) {
-                        if (type != null && !type.trim().isEmpty()) {
-                            for (String part : type.split(",")) {
-                                part = part.trim();
-                                if (!part.isEmpty() && !mimeTypes.contains(part)) mimeTypes.add(part);
-                            }
+                if (params != null && params.getAcceptTypes() != null) {
+                    for (String type : params.getAcceptTypes()) {
+                        if (type == null) continue;
+                        for (String part : type.split(",")) {
+                            String mime = part.trim();
+                            if (!mime.isEmpty() && !mimeTypes.contains(mime)) mimeTypes.add(mime);
                         }
                     }
                 }
-                if (!mimeTypes.isEmpty()) {
-                    i.setType(mimeTypes.size() == 1 ? mimeTypes.get(0) : "*/*");
-                    if (mimeTypes.size() > 1) {
-                        i.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes.toArray(new String[0]));
-                    }
+                if (mimeTypes.size() == 1) {
+                    pick.setType(mimeTypes.get(0));
+                } else if (mimeTypes.size() > 1) {
+                    pick.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes.toArray(new String[0]));
                 }
                 if (params != null && params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE) {
-                    i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                    pick.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
                 }
 
                 try {
-                    startActivityForResult(i, FILE_CHOOSER);
+                    startActivityForResult(Intent.createChooser(pick, "اختيار ملف"), FILE_CHOOSER);
                 } catch (Exception e) {
                     fileCallback = null;
                     cb.onReceiveValue(null);
@@ -130,8 +124,9 @@ public class MainActivity extends Activity {
             }
         }
 
-        fileCallback.onReceiveValue(result);
+        ValueCallback<Uri[]> cb = fileCallback;
         fileCallback = null;
+        cb.onReceiveValue(result);
     }
 
     @Override public void onBackPressed() {
