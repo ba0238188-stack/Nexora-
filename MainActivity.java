@@ -15,7 +15,6 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.view.ViewGroup;
-import android.view.View;
 
 import java.util.ArrayList;
 
@@ -28,7 +27,6 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle b) {
         super.onCreate(b);
         webView = new WebView(this);
-        webView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
         setContentView(webView, new ViewGroup.LayoutParams(-1, -1));
         requestNeededPermissions();
         configure();
